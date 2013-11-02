@@ -1,0 +1,24 @@
+{
+  "name": "ninja-sonos",
+  "version": "0.0.1",
+  "description": "This driver let's will interface with your own sonos system, right from your dashboard",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/svrooij/ninja-sonos.git"
+  },
+  "keywords": [
+    "sensor",
+    "ninjablocks",
+    "sonos",
+    "actuator"
+  ],
+  "author": "Stephan van Rooij",
+  "license": "MIT",
+  "dependencies": {
+  	"sonos":"git://github.com/bencevans/node-sonos.git"
+  }
+}
