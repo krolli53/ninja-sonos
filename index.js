@@ -124,7 +124,7 @@ function SonosDevice(options,app) {
 	this.host =options.ip;
 
 	this.name = options.name;
-	this.timeout = (options.timeout > 30)?options.timeout : 120;
+	this.timeout = (options.timeout > 30)?options.timeout : 240;
 	this._app = app;
 	
 	
@@ -132,6 +132,7 @@ function SonosDevice(options,app) {
 	this.sonos = new Sonos(this.host);
 	
 	var self = this;
+	this.playing = 1;
 	
 // 	function tts() { //Copied from XMBC driver
 // 		this.readable = true;
@@ -164,11 +165,14 @@ function SonosDevice(options,app) {
 	
 	playSwitch.prototype.write = function(data){
 		//log("Playstate recieved "+data);
+		
 		if(data == 0) {
 			this.device.pause();
 		} else {
 			this.device.resume();
 		}
+		
+		playing = data;
 	}
 	
 	function gong() {
@@ -219,7 +223,7 @@ function SonosDevice(options,app) {
 
 SonosDevice.prototype.actuate = function(){
 	//Here should be checked if the music is playing.
-	this.devices.playSwitch.emit('data', 1);
+	this.devices.playSwitch.emit('data', this.playing);
 	this.devices.gong.emit('data',0);
 }
 
