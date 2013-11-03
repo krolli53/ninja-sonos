@@ -89,8 +89,8 @@ Driver.prototype.rickRoll = function() {
 		var device = this._devices[ip];
 		log('RickRoll: ',device.name);
 		//Hier moet nog iets komen....
-		//device.say('Hello this is sonos speaking');
-		device.dog();
+		device.say('Hello this is sonos speaking');
+		//device.dog();
 	}
 }
 
@@ -114,6 +114,7 @@ Driver.prototype.add = function(devOptions) {
 			self.emit('register', sonosDevice.devices[id]);
 		});
 		sonosDevice.actuate();
+		sonosDevice.say('Ninjablock has been connected to this device');
 	},4000);
 
 }
@@ -208,18 +209,27 @@ function SonosDevice(options,app) {
 	},1000*this.timeout);
 }
 
-//Sadly enough the google TTS needs a certain user agent.
-//I need to proxy this request, but not sure I want to
-// SonosDevice.prototype.say = function(text,lang) {
-// 	if (text == undefined) text = 'Hello Stefan';
-// 	if (lang == undefined) lang = 'en';
-// 	
-// 	text = text.replace(/ /g,'+');
-// 	var url = 'http://translate.google.com/translate_tts?tl='+lang+'&q='+text;
-// 	log(url);
-// 	//this.sonos.queueNext(url, function(err, playing) {
-// 	this.play(url);
-// }
+
+SonosDevice.prototype.say = function(text,lang) {
+	var supportedLanguages = ["ca-es","zh-cn","zh-hk","da-dk","nl-nl","en-au","en-ca","en-gb","en-in","en-us","fi-fi","fr-ca","fr-fr","de-de","it-it","ja-jp","ko-kr","nb-no","pl-pl","pt-br","pt-pt","ru-ru","es-mx","es-es","sv-se"];
+	
+	//Check if the languages is correct!
+	if (lang == undefined || supportedLanguages.indexOf(lang) == -1) lang = 'en-us';
+	//Check if their is a text
+	if (text == undefined) text = 'Hello Ninja';
+	
+	//Url encode the string
+	text = text.replace(/ /g,'_');
+	text = encodeURIComponent(text); 
+	
+	//It seams like the sonos device doesn't support %20 or + in the url. And it should be a known file.
+	//My server does a redirect to a free TTS service, don't abuse it please!!
+	var url = 'http://i872953.iris.fhict.nl/speech/'+lang+'_'+text+'.mp3';
+	//log(url);
+	
+	//And play the url :D
+	this.play(url);
+}
 
 SonosDevice.prototype.actuate = function(){
 	//Here should be checked if the music is playing.

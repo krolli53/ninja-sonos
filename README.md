@@ -20,5 +20,8 @@ To-Do
 - [x] Added Sonos players trough the driver settings
 - [x] One relay switch for pause / resume music
 - [x] One relay that can be switched on for a barking dog. (Can I create a button actuator, for use in the rules engine? And this one should not create the queue, but works for now.)
+- [x] Some kind of TTS for anouncements http://translate.google.com/translate_tts?tl=en&q=Someone%20at%20the%20door
+- [ ] Enable custom TTS right from the dashboard / rules (any help on how to get the text to the device??)
 - [ ] Continue playing the music after barking dog (getting the queue doesn't work yet)
-- [ ] Some kind of TTS for anouncements http://translate.google.com/translate_tts?tl=en&q=Someone%20at%20the%20door
+- [ ] Continue playing after TTS
+
