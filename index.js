@@ -15,6 +15,8 @@ function Driver(opts,app) {
 	this._app = app;
 	this._opts = opts;
 	
+	this._opts.ttsLang = this._opts.ttsLang || 'en-us';
+	
 	this._opts.sonoses = opts.sonoses || {};
 
 	this._devices = {};
@@ -53,19 +55,21 @@ Driver.prototype.config = function(rpc,cb) {
           		{ "type": "paragraph", "text":"Please enter the IP address and a nickname of the sonos player"},
           		{ "type": "input_field_text", "field_name": "ip", "value": "", "label": "IP/Host", "placeholder": "x.x.x.x", "required": true},
           		{ "type": "input_field_text", "field_name": "name", "value": "", "label": "Name", "placeholder": "LivingRoom", "required": true},
+          		{ "type": "paragraph", "text":"Enter the Text-to-speech language you wish to use. See http://www.voicerss.org/api/documentation.aspx for possible values"},
+          		{ "type": "input_field_text", "field_name": "tts", "value": "en-us", "label": "Text-to-speech language", "placeholder": "en-us", "required": true},
           		{ "type": "submit", "name": "Add", "rpc_method": "add" },
           		{ "type":"close", "text":"Cancel"}
         	]
       	});
       	break;
     case 'add':
-      var devOptions = {"ip": rpc.params.ip, "name": rpc.params.name}
+      var devOptions = {"ip": rpc.params.ip, "name": rpc.params.name, "ttsLang": rpc.params.tts}
       self._opts.sonoses[rpc.params.ip] = devOptions;
       self.save();
       self.add(devOptions);
       cb(null, {
         "contents": [
-          { "type":"paragraph", "text":"Sonos at " + rpc.params.ip + " with options (name : " + rpc.params.name + ") is added."},
+          { "type":"paragraph", "text":"Sonos at " + rpc.params.ip + " with options (name : " + rpc.params.name + " TTS: "+rpc.params.ttsLang+") is added."},
           { "type":"close", "text":"Close"}
         ]
       });
@@ -108,13 +112,16 @@ Driver.prototype.add = function(devOptions) {
 	//Wait a few seconds, to be sure it is connected to the cloud.
 	setTimeout(function() {
 		Object.keys(sonosDevice.devices).forEach(function(id) {
-			self._app.log.info('Adding sub-device', id, sonosDevice.devices[id].G);
+			self._app.log.info('Adding sub-device', id);
 			//sonosDevice.devices[id].emit('register');
 			
 			self.emit('register', sonosDevice.devices[id]);
 		});
 		sonosDevice.actuate();
-		sonosDevice.say('Ninjablock has been connected to this device');
+		sonosDevice.devices.tts.emit('data','Sonos '+devOptions.name+ ' is now connected');
+// 		
+// 		if(sonosDevice.ttsLang == 'en-us')
+// 			sonosDevice.say('Ninjablock has been connected to this device');
 	},4000);
 
 }
@@ -123,11 +130,13 @@ module.exports = Driver;
 function SonosDevice(options,app) {
 
 	this.host =options.ip;
-
+	this.ttsLang = options.ttsLang || 'en-us';
 	this.name = options.name;
-	this.timeout = (options.timeout > 30)?options.timeout : 240;
-	this._app = app;
+
+	this.timeout = (options.timeout < 30)?options.timeout : 240;
 	
+	this._app = app;
+	this._app.log.info('Sonos connected with settings: ',options);
 	
 	var Sonos = require('sonos').Sonos;
 	this.sonos = new Sonos(this.host);
@@ -135,23 +144,25 @@ function SonosDevice(options,app) {
 	var self = this;
 	this.playing = 1;
 	
-// 	function tts() { //Copied from XMBC driver
-// 		this.readable = true;
-// 		this.writeable = true;
-// 		this.V = 0;
-// 		this.D = 240;
-// 		this.G = self.name.replace(/[^a-zA-Z0-9]/g, '')+'tts';
-// 		
-// 		this.device = self;
-// 	}
-// 	
-// 	util.inherits(tts, stream);
-// 	
-// 	tts.prototype.write = function(data){
-// 		log('Sonos - received TTS',data);
-// 		this.device.say(data);
-// 		
-// 	}
+	function tts() { //Copied from XMBC driver
+		this.readable = true;
+		this.writeable = true;
+		this.V = 0;
+		this.D = 240;
+		this.G = self.name.replace(/[^a-zA-Z0-9]/g, '')+'tts';
+		
+		this.name = 'Sonos ' +self.name + ' - TTS';
+		
+		this.device = self;
+	}
+	
+	util.inherits(tts, stream);
+	
+	tts.prototype.write = function(data){
+		log('Sonos - received TTS',data);
+		this.device.say(data,device.ttsLang);
+		
+	}
 	
 	function playSwitch() {
 		this.readable = true;
@@ -159,6 +170,7 @@ function SonosDevice(options,app) {
 		this.V = 0;
 		this.D = 238;
 		this.G = self.name.replace(/[^a-zA-Z0-9]/g, '')+'play';
+		this.name = 'Sonos ' +self.name + ' - Music';
 		this.device = self;
 	}
 	
@@ -182,6 +194,7 @@ function SonosDevice(options,app) {
 		this.V = 0;
 		this.D = 238;
 		this.G = self.name.replace(/[^a-zA-Z0-9]/g, '')+'gong';
+		this.name = 'Sonos ' +self.name + ' - dog';
 		this.device = self;
 	}
 	
@@ -197,7 +210,7 @@ function SonosDevice(options,app) {
 	
 	//All devices
 	this.devices = {
-// 		tts : new tts(),
+		tts : new tts(),
 		playSwitch: new playSwitch(),
 		gong : new gong()
 	};
@@ -225,7 +238,8 @@ SonosDevice.prototype.say = function(text,lang) {
 	//It seams like the sonos device doesn't support %20 or + in the url. And it should be a known file.
 	//My server does a redirect to a free TTS service, don't abuse it please!!
 	var url = 'http://i872953.iris.fhict.nl/speech/'+lang+'_'+text+'.mp3';
-	//log(url);
+	
+	this._app.log.info('TTS: ',text,lang,url);
 	
 	//And play the url :D
 	this.play(url);
@@ -238,9 +252,10 @@ SonosDevice.prototype.actuate = function(){
 }
 
 SonosDevice.prototype.pause = function(){
+	var self = this;
 	this.sonos.pause(function(err) {
 		if(err)
-			log(err);
+			self._app.log.error(err);
 	});
 }
 
@@ -248,23 +263,27 @@ SonosDevice.prototype.pause = function(){
 //Else it should play the called url
 SonosDevice.prototype.play = function(url) {
 	var self = this;
-	if(url == undefined || url == null) {
-		this.sonos.play(function(err,playing){
-			if(err)
-				log(err);
-		});
-	} else {
+	if(url) {
 		//First Flush the playlist
-		this.sonos.flush(function(err,flushed) {
-			if(err == null) {
+		self.sonos.flush(function(err,flushed) {
+			if(err) {
+				self._app.log.error(err);
+			} else {
 				//Queue the url
-				self.sonos.play(url, function(err, playing) {
-					if(err == null) {
+				self.sonos.play(url, function(err2, playing) {
+					if(err2) {
+						self._app.log.error(err2);
+					} else {
 						//Resume playing.
 						self.resume();
 					}
 				});
 			}
+		});
+	} else {
+		self.sonos.play(function(err,playing){
+			if(err)
+				self._app.log.error(err);
 		});
 	}
 }

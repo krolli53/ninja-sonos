@@ -1,6 +1,6 @@
 {
   "name": "ninja-sonos",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "This driver let's will interface with your own sonos system, right from your dashboard",
   "main": "index.js",
   "scripts": {
