@@ -25,9 +25,8 @@ function ninjaSonos(opts,app){
   this.appName = 'NinjaBlocks-'+ app.id;
 
   //This is fired when the client connects
-  this.writeLog("Driver loaded");
   app.on('client::up',function(){
-      this.writeLog("Ninja Sonos => Client Up");
+      self.writeLog("Ninja Sonos => Client Up");
       //If we have players, add them.
       if(self._opts.sonosPlayers.length > 0){
         self.loadPlayers.call(self);
