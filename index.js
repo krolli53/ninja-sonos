@@ -8,7 +8,7 @@
  */
 var util = require('util')
   , stream = require('stream')
-  , Sonos = require('sonos');
+  , sonos = require('sonos');
 
 util.inherits (ninjaSonos,stream);
 module.exports = ninjaSonos;
@@ -24,6 +24,9 @@ function ninjaSonos(opts,app){
   this._opts.logging = opts.logging == undefined ? 2 : opts.logging;
   this.appName = 'NinjaBlocks-'+ app.id;
 
+  this.devices = [];
+  this.sonosSearcher;
+
   //This is fired when the client connects
   app.on('client::up',function(){
       self.writeLog("Ninja Sonos => Client Up");
@@ -31,6 +34,8 @@ function ninjaSonos(opts,app){
       if(self._opts.sonosPlayers.length > 0){
         self.loadPlayers.call(self);
       } else { //No players, so search for them.
+        //first create a default config
+        self.save();
         self.findPlayers.call(self);
       }
   });
@@ -39,10 +44,14 @@ function ninjaSonos(opts,app){
 ninjaSonos.prototype.findPlayers = function(){
   var self = this;
   this.writeLog("Ninja Sonos => Searching players");
-  var search = Sonos.search();
+  self.sonosSearcher = sonos.search();
 
-  search.on('DeviceAvailable',function(device,model){
-    self.writeLog('Found ' + model +': '+device);
+  self.sonosSearcher.on('DeviceAvailable',function(ip,model){
+    self.writeLog('Found ' + model +': '+ip);
+    //Check if it is a player.
+    if(model.substr(0,3) == "ZPS"){
+      self.registerPlayer(ip);
+    }
 
     //Here I should register the device.
   });
@@ -51,20 +60,41 @@ ninjaSonos.prototype.findPlayers = function(){
 ninjaSonos.prototype.loadPlayers = function(){
   var self = this;
   this.writeLog("Ninja Sonos => Loading players");
-  self._opts.sonosPlayers.forEach(self.registerPlayer.bind(this));
+  self._opts.sonosPlayers.forEach(self.setupPlayer.bind(this));
 };
 
 ninjaSonos.prototype.registerPlayer = function(ip){
   var self = this;
-  this.writeLog("Ninja Sonos => Setting up player "+ip);
+  var index = self._opts.sonosPlayers.indexOf(ip);
+  if(index > -1) //Already in de list
+    return;
+
+  self._opts.sonosPlayers.push(ip);
+  self.save();
+
+  self.setupPlayer(ip);
+
 };
 
-ninjaSonos.prototype.writeLog = function(){
+ninjaSonos.prototype.setupPlayer = function(ip){
+  var self = this;
+  this.writeLog("Ninja Sonos => Setting up player "+ip);
+
+  //Create a Node.js sonos device.
+  var sonosPlayer = new sonos.Sonos(ip);
+
+  //Load the information
+  sonosPlayer.getZoneInfo(function(err,info){
+    self.writeLog(err,info);
+  });
+};
+
+ninjaSonos.prototype.writeLog = function(text){
   if(this._opts.logging == 2)
-    this._app.log.info(arguments);
+    this._app.log.info(text,arguments);
 };
 
 ninjaSonos.prototype.writeError =function(text){
   if(this._opts.logging == 2 || this._opts.logging == 1)
-    this._app.log.error(arguments);
+    this._app.log.error(text,arguments);
 };
