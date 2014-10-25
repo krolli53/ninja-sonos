@@ -60,7 +60,7 @@ ninjaSonos.prototype.foundPlayer = function(ip,model){
 
 ninjaSonos.prototype.loadPlayers = function(){
   var self = this;
-  this.writeLog("Ninja Sonos => Loading players");
+  this.writeLog("Loading players");
   self._opts.sonosPlayers.forEach(self.setupPlayer.bind(this));
 };
 
@@ -79,7 +79,7 @@ ninjaSonos.prototype.registerPlayer = function(ip){
 
 ninjaSonos.prototype.setupPlayer = function(ip){
   var self = this;
-  this.writeLog("Ninja Sonos => Setting up player "+ip);
+  this.writeLog("Setting up player "+ip);
 
   //Create a Node.js sonos device.
   var sonosPlayer = new sonos.Sonos(ip);
@@ -92,16 +92,16 @@ ninjaSonos.prototype.setupPlayer = function(ip){
 ninjaSonos.prototype.loadedAttributes = function(err,attr){
   var self = this;
   if(attr){
-    self.writeLog("Loaded attributes",info);
+    self.writeLog("Loaded attributes",attr);
   }
 };
 
-ninjaSonos.prototype.writeLog = function(text){
+ninjaSonos.prototype.writeLog = function(){
   if(this._opts.logging == 2)
-    this._app.log.info(text,arguments);
+    this._app.log.info("Ninja Sonos",arguments);
 };
 
-ninjaSonos.prototype.writeError =function(text){
+ninjaSonos.prototype.writeError =function(){
   if(this._opts.logging == 2 || this._opts.logging == 1)
-    this._app.log.error(text,arguments);
+    this._app.log.error("Ninja Sonos",arguments);
 };
