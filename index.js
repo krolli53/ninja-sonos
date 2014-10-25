@@ -113,7 +113,7 @@ ninjaSonos.prototype.loadedAttributes = function(err,attr){
     self.writeLog("Loaded attributes for ("+self.loadingIP+")",attr);
 
     //Create the sonos config
-    var config = {IP = ip,CurrentZoneName = attr.CurrentZoneName};
+    var config = new {IP:ip,CurrentZoneName: attr.CurrentZoneName};
     var client = self.sonosClient[ip];
     self.emit('register',new NinjaSonosDriver(client,config,self._app));
   }
