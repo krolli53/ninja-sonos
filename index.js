@@ -102,7 +102,7 @@ ninjaSonos.prototype.setupPlayer = function(ip){
 
   //Load the information
   sonosPlayer.getZoneAttrs(staticLoadedAttributes);
-  self.sonosClient[ip] = sonosPlayer;
+  this.sonosClient[ip] = sonosPlayer;
   sleep.sleep(1);
 };
 
