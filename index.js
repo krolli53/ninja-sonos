@@ -46,16 +46,17 @@ ninjaSonos.prototype.findPlayers = function(){
   this.writeLog("Ninja Sonos => Searching players");
   self.sonosSearcher = sonos.search();
 
-  self.sonosSearcher.on('DeviceAvailable',function(ip,model){
-    self.writeLog('Found ' + model +': '+ip);
-    //Check if it is a player.
-    if(model.substr(0,3) == "ZPS"){
-      self.registerPlayer(ip);
-    }
-
-    //Here I should register the device.
-  });
+  self.sonosSearcher.on('DeviceAvailable',self.foundPlayer);
 };
+
+ninjaSonos.prototype.foundPlayer = function(ip,model){
+  var self = this;
+  self.writeLog('Found ' + model +': '+ip);
+  //Check if it is a player.
+  if(model.substr(0,3) == "ZPS"){
+    self.registerPlayer(ip);
+  }
+}
 
 ninjaSonos.prototype.loadPlayers = function(){
   var self = this;
@@ -84,9 +85,15 @@ ninjaSonos.prototype.setupPlayer = function(ip){
   var sonosPlayer = new sonos.Sonos(ip);
 
   //Load the information
-  sonosPlayer.getZoneInfo(function(err,info){
-    self.writeLog(err,info);
-  });
+  sonosPlayer.getZoneInfo(self.loadedAttributes);
+  self.devices[ip] = sonosPlayer;
+};
+
+ninjaSonos.prototype.loadedAttributes = function(err,attr){
+  var self = this;
+  if(attr){
+    self.writeLog("Loaded attributes",info);
+  }
 };
 
 ninjaSonos.prototype.writeLog = function(text){
