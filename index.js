@@ -88,10 +88,10 @@ ninjaSonos.prototype.registerPlayer = function(ip){
 };
 
 ninjaSonos.prototype.setupPlayer = function(ip){
+  var self = this;
   //Check if we are loading attributes
   if(self.loadingIP == undefined || self.loadingIP == "") {
-
-    var self = this;
+    
     this.writeLog("Setting up player "+ip);
 
     //Saving the current IP
