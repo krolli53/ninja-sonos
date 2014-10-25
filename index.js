@@ -95,7 +95,7 @@ ninjaSonos.prototype.setupPlayer = function(ip){
   this.writeLog("Setting up player "+ip);
 
   //Saving the current IP
-  self.loadingIP;
+  self.loadingIP = ip;
 
   //Create a Node.js sonos device.
   var sonosPlayer = new sonos.Sonos(ip);
@@ -108,15 +108,14 @@ ninjaSonos.prototype.setupPlayer = function(ip){
 
 ninjaSonos.prototype.loadedAttributes = function(err,attr){
   var self = this;
+  var ip = self.loadingIP
   if(attr){
     self.writeLog("Loaded attributes for ("+self.loadingIP+")",attr);
 
     //Create the sonos config
-    var config = {};
-    config.IP = self.loadingIP;
-    config.CurrentZoneName = attr.CurrentZoneName;
-
-    self.emit('register',new NinjaSonosDriver(self.sonosClient[config.IP],config,self._app));
+    var config = {IP = ip,CurrentZoneName = attr.CurrentZoneName};
+    var client = self.sonosClient[ip];
+    self.emit('register',new NinjaSonosDriver(client,config,self._app));
   }
 
 };
