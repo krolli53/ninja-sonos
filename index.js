@@ -8,7 +8,9 @@
  */
 var util = require('util')
   , stream = require('stream')
-  , sonos = require('sonos');
+  , sonos = require('sonos')
+  , sleep = require('sleep')
+  , NinjaSonosDriver = require('./lib/NinjaSonosDriver');
 
 util.inherits (ninjaSonos,stream);
 module.exports = ninjaSonos;
@@ -24,14 +26,17 @@ function ninjaSonos(opts,app){
   this._opts.logging = opts.logging == undefined ? 2 : opts.logging;
   this.appName = 'NinjaBlocks-'+ app.id;
 
-  this.devices = [];
+  this.sonosClient = [];
+  this.subDevices = [];
   this.sonosSearcher;
+
+  this.loadingIp;
 
   staticLoadedAttributes = self.loadedAttributes.bind(self);
 
   //This is fired when the client connects
   app.on('client::up',function(){
-      self.writeLog("Ninja Sonos => Client Up");
+      self.writeLog("Client Up");
       //If we have players, add them.
       if(self._opts.sonosPlayers.length > 0){
         self.loadPlayers.call(self);
@@ -48,7 +53,7 @@ var staticLoadedAttributes;
 
 ninjaSonos.prototype.findPlayers = function(){
   var self = this;
-  this.writeLog("Ninja Sonos => Searching players");
+  this.writeLog("Searching players");
 
   //Bind static function
   staticFoundPlayer = self.foundPlayer.bind(this);
@@ -89,19 +94,31 @@ ninjaSonos.prototype.setupPlayer = function(ip){
   var self = this;
   this.writeLog("Setting up player "+ip);
 
+  //Saving the current IP
+  self.loadingIP;
+
   //Create a Node.js sonos device.
   var sonosPlayer = new sonos.Sonos(ip);
 
   //Load the information
-  sonosPlayer.getZoneInfo(staticLoadedAttributes);
-  self.devices[ip] = sonosPlayer;
+  sonosPlayer.getZoneAttrs(staticLoadedAttributes);
+  self.sonosClient[ip] = sonosPlayer;
+  sleep.sleep(1);
 };
 
 ninjaSonos.prototype.loadedAttributes = function(err,attr){
   var self = this;
   if(attr){
-    self.writeLog("Loaded attributes",attr);
+    self.writeLog("Loaded attributes for ("+self.loadingIP+")",attr);
+
+    //Create the sonos config
+    var config = {};
+    config.IP = self.loadingIP;
+    config.CurrentZoneName = attr.CurrentZoneName;
+
+    self.emit('register',new NinjaSonosDriver(self.sonosClient[config.IP],config,self._app));
   }
+
 };
 
 ninjaSonos.prototype.writeLog = function(){

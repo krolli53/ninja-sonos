@@ -19,6 +19,7 @@
   "author": "Stephan van Rooij",
   "license": "MIT",
   "dependencies": {
-  	"sonos":"git://github.com/bencevans/node-sonos.git"
+  	"sonos":"git://github.com/bencevans/node-sonos.git",
+    "sleep":"git://github.com/ErikDubbelboer/node-sleep.git"
   }
 }
