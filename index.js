@@ -88,32 +88,46 @@ ninjaSonos.prototype.registerPlayer = function(ip){
 };
 
 ninjaSonos.prototype.setupPlayer = function(ip){
-  var self = this;
-  this.writeLog("Setting up player "+ip);
+  //Check if we are loading attributes
+  if(self.loadingIP == undefined || self.loadingIP == "") {
 
-  //Saving the current IP
-  self.loadingIP = ip;
+    var self = this;
+    this.writeLog("Setting up player "+ip);
 
-  //Create a Node.js sonos device.
-  var sonosPlayer = new sonos.Sonos(ip);
+    //Saving the current IP
+    self.loadingIP = ip;
 
-  //Load the information
-  sonosPlayer.getZoneAttrs(self.staticLoadedAttributes);
-  this.sonosClient[ip] = sonosPlayer;
-  sleep.sleep(1);
+    //Create a Node.js sonos device.
+    var sonosPlayer = new sonos.Sonos(ip);
+
+    //Load the information
+    sonosPlayer.getZoneAttrs(self.staticLoadedAttributes);
+    this.sonosClient[ip] = sonosPlayer;
+
+  } else { //We are already loading a device, so we set a timeout to retry.
+    setTimeout(function(){
+      self.setupPlayer(ip);
+    }.bind(this),1500);
+  }
+
 };
 
 ninjaSonos.prototype.loadedAttributes = function(err,attr){
   var self = this;
-  var ip = self.loadingIP
+  var ip = self.loadingIP;
+
   if(attr){
     self.writeLog("Loaded attributes for ("+self.loadingIP+")",attr);
 
     //Create the sonos config
     var config = {IP:ip,CurrentZoneName: attr.CurrentZoneName,logging:self._opts.logging};
     var client = self.sonosClient[ip];
+
     self.emit('register',new NinjaSonosDriver(client,config,self._app));
   }
+
+  //Resetting the value so we can try the next IP.
+  self.loadingIP = "";
 
 };
 
