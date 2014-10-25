@@ -32,7 +32,7 @@ function ninjaSonos(opts,app){
 
   this.loadingIp;
 
-  staticLoadedAttributes = self.loadedAttributes.bind(self);
+  this.staticLoadedAttributes = self.loadedAttributes.bind(self);
 
   //This is fired when the client connects
   app.on('client::up',function(){
@@ -48,18 +48,15 @@ function ninjaSonos(opts,app){
   });
 };
 
-var staticFoundPlayer;
-var staticLoadedAttributes;
-
 ninjaSonos.prototype.findPlayers = function(){
   var self = this;
   this.writeLog("Searching players");
 
   //Bind static function
-  staticFoundPlayer = self.foundPlayer.bind(this);
+  self.staticFoundPlayer = self.foundPlayer.bind(this);
 
   self.sonosSearcher = sonos.search();
-  self.sonosSearcher.on('DeviceAvailable',staticFoundPlayer);
+  self.sonosSearcher.on('DeviceAvailable',self.staticFoundPlayer);
 };
 
 ninjaSonos.prototype.foundPlayer = function(ip,model){
@@ -101,7 +98,7 @@ ninjaSonos.prototype.setupPlayer = function(ip){
   var sonosPlayer = new sonos.Sonos(ip);
 
   //Load the information
-  sonosPlayer.getZoneAttrs(staticLoadedAttributes);
+  sonosPlayer.getZoneAttrs(self.staticLoadedAttributes);
   this.sonosClient[ip] = sonosPlayer;
   sleep.sleep(1);
 };
