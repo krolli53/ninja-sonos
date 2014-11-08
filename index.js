@@ -133,7 +133,7 @@ ninjaSonos.prototype.config = function(rpc,cb){
         });
       }
       break;
-    case 'mainSetings':
+    case 'mainSettings':
       return cb(null,{
         "contents":[
           { "type": "paragraph", "text": "Sonos driver main settings"},
