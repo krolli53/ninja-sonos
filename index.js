@@ -159,7 +159,7 @@ ninjaSonos.prototype.config = function(rpc,cb){
       self._opts.urls.radio2 = rpc.params.url_radio2 || RADIO2_MP3_URL;
       self._opts.urls.radio3 = rpc.params.url_radio3 || RADIO3_MP3_URL;;
       self.save();
-      var newConfig = {"logging":self_opts.logging,"urls":self._opts.urls};
+      var newConfig = {"logging":self._opts.logging,"urls":self._opts.urls};
       self.updatePlayerConfig(newConfig);
       return cb(null,{
         "contents":[
