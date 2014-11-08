@@ -18,9 +18,9 @@ module.exports = ninjaSonos;
 /* Default urls, can be overriden with the settings. */
 var DOORBELL_MP3_URL = "http://i872953.iris.fhict.nl/sounds/two_tone_doorbell.mp3";
 var DOGS_MP3_URL = "http://i872953.iris.fhict.nl/sounds/barking_dogs.mp3";
-var RADIO1_MP3_URL = "http://vip-icecast.538.lw.triple-it.nl/SLAMFM_MP3";
-var RADIO2_MP3_URL = "http://vip-icecast.538.lw.triple-it.nl/WEB17_MP3";
-var RADIO3_MP3_URL = "http://icecast-qmusic.cdp.triple-it.nl/Qmusic_nl_nonstop_96.mp3";
+var RADIO1_MP3_URL = "x-rincon-mp3radio://vip-icecast.538.lw.triple-it.nl/SLAMFM_MP3";
+var RADIO2_MP3_URL = "x-rincon-mp3radio://vip-icecast.538.lw.triple-it.nl/WEB17_MP3";
+var RADIO3_MP3_URL = "x-rincon-mp3radio://icecast-qmusic.cdp.triple-it.nl/Qmusic_nl_nonstop_96.mp3";
 
 function ninjaSonos(opts,app){
   var self = this;
@@ -140,6 +140,7 @@ ninjaSonos.prototype.config = function(rpc,cb){
           { "type": "paragraph", "text": "Logging level (2 = everything, 1 = only errors, 0 = nothing)"},
           { "type": "input_field_text", "field_name": "loggingLevel", "value": self._opts.logging, "label": "Logging", "placeholder": "2", "required": true},
           { "type": "paragraph", "text": "You can set the urls for the extra states here, these will be called from your dashboard"},
+          { "type": "paragraph", "text": "Be carefull streaming urls should start with 'x-rincon-mp3radio://' instead of http:// !!!"},
           { "type": "input_field_text", "field_name":"url_dogs","value":self._opts.urls.dogs,"label":"dogs","placeholder":DOGS_MP3_URL},
           { "type": "input_field_text", "field_name":"url_doorbell","value":self._opts.urls.doorbell,"label":"doorbell","placeholder":DOORBELL_MP3_URL},
           { "type": "input_field_text", "field_name":"url_radio1","value":self._opts.urls.radio1,"label":"radio1","placeholder":RADIO1_MP3_URL},
@@ -154,14 +155,15 @@ ninjaSonos.prototype.config = function(rpc,cb){
       self._opts.logging = rpc.params.loggingLevel;
       self._opts.urls.dogs = rpc.params.url_dogs;
       self._opts.urls.doorbell = rpc.params.url_doorbell;
-      self._opts.urls.radio1 = rpc.params.url_radio1;
-      self._opts.urls.radio2 = rpc.params.url_radio2;
-      self._opts.urls.radio3 = rpc.params.url_radio3;
+      self._opts.urls.radio1 = rpc.params.url_radio1 || RADIO1_MP3_URL;
+      self._opts.urls.radio2 = rpc.params.url_radio2 || RADIO2_MP3_URL;
+      self._opts.urls.radio3 = rpc.params.url_radio3 || RADIO3_MP3_URL;;
       self.save();
+      var newConfig = {"logging":self_opts.logging,"urls":self._opts.urls};
+      self.updatePlayerConfig(newConfig);
       return cb(null,{
         "contents":[
           { "type": "paragraph", "text":"Settings saved"},
-          { "type": "paragraph", "text":"Url changed will only work on new devices. Or after restart."},
           { "type":"close", "text":"Close"}
         ]
       });
@@ -219,6 +221,15 @@ ninjaSonos.prototype.setupPlayer = function(ip){
     }.bind(this),1500);
   }
 
+};
+
+ninjaSonos.prototype.updatePlayerConfig = function(newConf){
+  var self = this;
+  if(self.sonosClient.length >0){
+    for(var ip in self.sonosClient){
+      self.sonosClient[ip].UpdateConfig(newConf);
+    }
+  }
 };
 
 //This is used when we got a response back with player attributes.
