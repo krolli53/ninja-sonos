@@ -15,6 +15,13 @@ var util = require('util')
 util.inherits (ninjaSonos,stream);
 module.exports = ninjaSonos;
 
+/* Default urls, can be overriden with the settings. */
+var DOORBELL_MP3_URL = "http://i872953.iris.fhict.nl/sounds/two_tone_doorbell.mp3";
+var DOGS_MP3_URL = "http://i872953.iris.fhict.nl/sounds/barking_dogs.mp3";
+var RADIO1_MP3_URL = "http://vip-icecast.538.lw.triple-it.nl/SLAMFM_MP3";
+var RADIO2_MP3_URL = "http://vip-icecast.538.lw.triple-it.nl/WEB17_MP3";
+var RADIO3_MP3_URL = "http://icecast-qmusic.cdp.triple-it.nl/Qmusic_nl_nonstop_96.mp3";
+
 function ninjaSonos(opts,app){
   var self = this;
 
@@ -25,6 +32,16 @@ function ninjaSonos(opts,app){
   //logging 2 = everything (default), logging 1 = only errors
   this._opts.logging = opts.logging == undefined ? 2 : opts.logging;
   this.appName = 'NinjaBlocks-'+ app.id;
+
+
+
+  //URLS
+  this._opts.urls = opts.urls || {};
+  this._opts.urls.radio1 = this._opts.urls.radio1 || RADIO1_MP3_URL;
+  this._opts.urls.radio2 = this._opts.urls.radio2 || RADIO2_MP3_URL;
+  this._opts.urls.radio3 = this._opts.urls.radio3 || RADIO3_MP3_URL;
+  this._opts.urls.doorbell = this._opts.urls.doorbell || DOORBELL_MP3_URL;
+  this._opts.urls.dogs = this._opts.urls.dogs || DOGS_MP3_URL;
 
   this.sonosClient = [];
   this.subDevices = [];
@@ -81,7 +98,7 @@ ninjaSonos.prototype.config = function(rpc,cb){
   if(!rpc){ //No command, show main screen.
     return cb(null,{"contents":[
       { "type": "paragraph", "text": "Welcome to the Ninja sonos driver!"},
-      { "type": "submit", "name": "General Settings", "rpc_method": "genSettings" },
+      { "type": "submit", "name": "General Settings", "rpc_method": "mainSettings" },
       { "type": "paragraph", "text": "Make sure your sonos devices have a static ip before adding them!"},
 			{ "type": "submit", "name": "Add Sonos speaker", "rpc_method": "addSonos" },
       { "type":"close", "text":"Close"}
@@ -105,10 +122,49 @@ ninjaSonos.prototype.config = function(rpc,cb){
     case 'add':
       var ip = rpc.params.ip;
       self.writeLog("Adding player from dashboard",ip);
-      if(ip)
+      if(ip) {
         self.registerPlayer(ip);
+        return cb(null,{
+          "contents":[
+            { "type": "paragraph", "text":"Sonos player added to your dashboard!"},
+            { "type": "paragraph", "text":"Remember you have to create the states yourself. 'playing','stopped','dogs','doorbell'"},
+            { "type":"close", "text":"Close"}
+          ]
+        });
+      }
       break;
-    case 'genSettings':
+    case 'mainSetings':
+      return cb(null,{
+        "contents":[
+          { "type": "paragraph", "text": "Sonos driver main settings"},
+          { "type": "paragraph", "text": "Logging level (2 = everything, 1 = only errors, 0 = nothing)"},
+          { "type": "input_field_text", "field_name": "loggingLevel", "value": self._opts.logging, "label": "Logging", "placeholder": "2", "required": true},
+          { "type": "paragraph", "text": "You can set the urls for the extra states here, these will be called from your dashboard"},
+          { "type": "input_field_text", "field_name":"url_dogs","value":self._opts.urls.dogs,"label","dogs","placeholder":DOGS_MP3_URL},
+          { "type": "input_field_text", "field_name":"url_doorbell","value":self._opts.urls.doorbell,"label","doorbell","placeholder":DOORBELL_MP3_URL},
+          { "type": "input_field_text", "field_name":"url_radio1","value":self._opts.urls.radio1,"label","radio1","placeholder":RADIO1_MP3_URL},
+          { "type": "input_field_text", "field_name":"url_radio2","value":self._opts.urls.radio2,"label","radio2","placeholder":RADIO2_MP3_URL},
+          { "type": "input_field_text", "field_name":"url_radio3","value":self._opts.urls.radio3,"label","radio3","placeholder":RADIO3_MP3_URL},
+          {"type": "submit", "name": "Save settings", "rpc_method": "saveSettings" },
+          { "type":"close", "text":"Cancel"}
+        ]
+      });
+      break;
+    case 'saveSettings':
+      self._opts.logging = rpc.params.loggingLevel;
+      self._opts.urls.dogs = rpc.params.url_dogs;
+      self._opts.urls.doorbell = rpc.params.url_doorbell;
+      self._opts.urls.radio1 = rpc.params.url_radio1;
+      self._opts.urls.radio2 = rpc.params.url_radio2;
+      self._opts.urls.radio3 = rpc.params.url_radio3;
+      self.save();
+      return cb(null,{
+        "contents":[
+          { "type": "paragraph", "text":"Settings saved"},
+          { "type": "paragraph", "text":"Url changed will only work on new devices. Or after restart."},
+          { "type":"close", "text":"Close"}
+        ]
+      });
       break;
     default:
       self.writeError("Unknown RPC method",rpc.method,rpc);
@@ -174,7 +230,12 @@ ninjaSonos.prototype.loadedAttributes = function(err,attr){
     self.writeLog("Loaded attributes for ("+self.loadingIP+")",attr);
 
     //Create the sonos config
-    var config = {IP:ip,CurrentZoneName: attr.CurrentZoneName,logging:self._opts.logging};
+    var config = {
+      IP:ip,
+      CurrentZoneName: attr.CurrentZoneName,
+      logging:self._opts.logging,
+      urls:self._opts.urls
+    };
     var client = self.sonosClient[ip];
 
     self.emit('register',new NinjaSonosDriver(client,config,self._app));
