@@ -55,7 +55,12 @@ ninjaSonos.prototype.findPlayers = function(){
   this.writeLog("Searching players");
 
   self.sonosSearcher = sonos.search();
-  self.sonosSearcher.on('DeviceAvailable',self.staticFoundPlayer);
+  //self.sonosSearcher.on('DeviceAvailable',self.staticFoundPlayer);
+  self.sonosSearcher.on('DeviceAvailable',function(device,model){
+    var self2 = this;
+    self2.writeLog(device,model);
+    self2.staticFoundPlayer(device,model);
+  }.call(self));
 };
 
 ninjaSonos.prototype.foundPlayer = function(ip,model){
