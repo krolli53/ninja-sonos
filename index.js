@@ -72,6 +72,52 @@ ninjaSonos.prototype.foundPlayer = function(ip,model){
   }
 }
 
+/* Config Section */
+ninjaSonos.prototype.config = function(rpc,cb){
+  console.log('RPC CONFIG',rpc);
+
+  var self = this;
+
+  if(!rpc){ //No command, show main screen.
+    return cb(null,{"contents":[
+      { "type": "paragraph", "text": "Welcome to the Ninja sonos driver!"}
+      { "type": "submit", "name": "General Settings", "rpc_method": "genSettings" },
+      { "type": "paragraph", "text": "Make sure your sonos devices have a static ip before adding them!"},
+			{ "type": "submit", "name": "Add Sonos speaker", "rpc_method": "addSonos" },
+      { "type":"close", "text":"Close"}
+    ]});
+  } //Show other screen....
+
+  self.writeLog('Settings', rpc.method, rpc);
+
+  switch(rpc.method){
+    case 'addSonos':
+      return cb(null,{
+        "contents":[
+          { "type": "paragraph", "text":"Please enter the IP address of the new sonos speaker"},
+          { "type": "input_field_text", "field_name": "ip", "value": "", "label": "IP-address", "placeholder": "x.x.x.x", "required": true},
+          { "type": "paragraph", "text":"The device name will be fetched automaticly"},
+          {"type": "submit", "name": "Add", "rpc_method": "add" },
+          { "type":"close", "text":"Cancel"}
+        ]
+      });
+      break;
+    case 'add':
+      var ip = rpc.params.ip;
+      self.writeLog("Adding player from dashboard",ip);
+      if(ip)
+        self.registerPlayer(ip);
+      break;
+    case 'genSettings':
+      break;
+    default:
+      self.writeError("Unknown RPC method",rpc.method,rpc);
+  }
+
+
+};
+/* End Config section */
+
 ninjaSonos.prototype.registerPlayer = function(ip){
   var self = this;
   var index = self._opts.sonosPlayers.indexOf(ip);
