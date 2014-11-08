@@ -60,7 +60,7 @@ ninjaSonos.prototype.findPlayers = function(){
     var self2 = this;
     self2.writeLog(device,model);
     self2.staticFoundPlayer(device,model);
-  }.call(self));
+  });
 };
 
 ninjaSonos.prototype.foundPlayer = function(ip,model){
