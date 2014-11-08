@@ -80,7 +80,7 @@ ninjaSonos.prototype.config = function(rpc,cb){
 
   if(!rpc){ //No command, show main screen.
     return cb(null,{"contents":[
-      { "type": "paragraph", "text": "Welcome to the Ninja sonos driver!"}
+      { "type": "paragraph", "text": "Welcome to the Ninja sonos driver!"},
       { "type": "submit", "name": "General Settings", "rpc_method": "genSettings" },
       { "type": "paragraph", "text": "Make sure your sonos devices have a static ip before adding them!"},
 			{ "type": "submit", "name": "Add Sonos speaker", "rpc_method": "addSonos" },
