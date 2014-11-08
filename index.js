@@ -140,11 +140,11 @@ ninjaSonos.prototype.config = function(rpc,cb){
           { "type": "paragraph", "text": "Logging level (2 = everything, 1 = only errors, 0 = nothing)"},
           { "type": "input_field_text", "field_name": "loggingLevel", "value": self._opts.logging, "label": "Logging", "placeholder": "2", "required": true},
           { "type": "paragraph", "text": "You can set the urls for the extra states here, these will be called from your dashboard"},
-          { "type": "input_field_text", "field_name":"url_dogs","value":self._opts.urls.dogs,"label","dogs","placeholder":DOGS_MP3_URL},
-          { "type": "input_field_text", "field_name":"url_doorbell","value":self._opts.urls.doorbell,"label","doorbell","placeholder":DOORBELL_MP3_URL},
-          { "type": "input_field_text", "field_name":"url_radio1","value":self._opts.urls.radio1,"label","radio1","placeholder":RADIO1_MP3_URL},
-          { "type": "input_field_text", "field_name":"url_radio2","value":self._opts.urls.radio2,"label","radio2","placeholder":RADIO2_MP3_URL},
-          { "type": "input_field_text", "field_name":"url_radio3","value":self._opts.urls.radio3,"label","radio3","placeholder":RADIO3_MP3_URL},
+          { "type": "input_field_text", "field_name":"url_dogs","value":self._opts.urls.dogs,"label":"dogs","placeholder":DOGS_MP3_URL},
+          { "type": "input_field_text", "field_name":"url_doorbell","value":self._opts.urls.doorbell,"label":"doorbell","placeholder":DOORBELL_MP3_URL},
+          { "type": "input_field_text", "field_name":"url_radio1","value":self._opts.urls.radio1,"label":"radio1","placeholder":RADIO1_MP3_URL},
+          { "type": "input_field_text", "field_name":"url_radio2","value":self._opts.urls.radio2,"label":"radio2","placeholder":RADIO2_MP3_URL},
+          { "type": "input_field_text", "field_name":"url_radio3","value":self._opts.urls.radio3,"label":"radio3","placeholder":RADIO3_MP3_URL},
           {"type": "submit", "name": "Save settings", "rpc_method": "saveSettings" },
           { "type":"close", "text":"Cancel"}
         ]
